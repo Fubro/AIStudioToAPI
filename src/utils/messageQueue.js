@@ -25,6 +25,7 @@ class MessageQueue extends EventEmitter {
         if (this.closed) return;
         if (this.waitingResolvers.length > 0) {
             const resolver = this.waitingResolvers.shift();
+            clearTimeout(resolver.timeoutId);
             resolver.resolve(message);
         } else {
             this.messages.push(message);

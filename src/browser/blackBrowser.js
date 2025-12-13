@@ -13,7 +13,8 @@ const Logger = {
         const timestamp
             = new Date().toLocaleTimeString("zh-CN", { hour12: false })
             + "."
-            + new Date().getMilliseconds().toString()
+            + new Date().getMilliseconds()
+                .toString()
                 .padStart(3, "0");
         console.log(`[ProxyClient] ${timestamp}`, ...messages);
         const logElement = document.createElement("div");
@@ -87,7 +88,9 @@ class ConnectionManager extends EventTarget {
         this.reconnectAttempts++;
         setTimeout(() => {
             Logger.output(`Attempting reconnection ${this.reconnectAttempts} attempt...`);
-            this.establish().catch(() => { });
+            this.establish()
+                .catch(() => {
+                });
         }, this.reconnectDelay);
     }
 }
@@ -97,8 +100,6 @@ class RequestProcessor {
         this.activeOperations = new Map();
         this.cancelledOperations = new Set();
         this.targetDomain = "generativelanguage.googleapis.com";
-        this.maxRetries = 3; // Maximum 3 attempts
-        this.retryDelay = 2000; // Wait 2 seconds before each retry
     }
 
     execute(requestSpec, operationId) {
@@ -126,53 +127,33 @@ class RequestProcessor {
         };
 
         const attemptPromise = (async () => {
-            for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
-                try {
-                    Logger.output(
-                        `Executing request (attempt ${attempt}/${this.maxRetries}):`,
-                        requestSpec.method,
-                        requestSpec.path
+            try {
+                Logger.output(
+                    `Executing request:`,
+                    requestSpec.method,
+                    requestSpec.path
+                );
+
+                const requestUrl = this._constructUrl(requestSpec);
+                const requestConfig = this._buildRequestConfig(
+                    requestSpec,
+                    abortController.signal
+                );
+
+                const response = await fetch(requestUrl, requestConfig);
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    const error = new Error(
+                        `Google API returned error: ${response.status} ${response.statusText} ${errorBody}`
                     );
-
-                    const requestUrl = this._constructUrl(requestSpec);
-                    const requestConfig = this._buildRequestConfig(
-                        requestSpec,
-                        abortController.signal
-                    );
-
-                    const response = await fetch(requestUrl, requestConfig);
-
-                    if (!response.ok) {
-                        const errorBody = await response.text();
-                        const error = new Error(
-                            `Google API returned error: ${response.status} ${response.statusText} ${errorBody}`
-                        );
-                        error.status = response.status;
-                        throw error;
-                    }
-
-                    return response;
-                } catch (error) {
-                    if (error.name === "AbortError") {
-                        throw error;
-                    }
-                    const isNetworkError = error.message.includes("Failed to fetch");
-                    const isRetryableServerError
-                        = error.status && [500, 502, 503, 504].includes(error.status);
-                    if (
-                        (isNetworkError || isRetryableServerError)
-                        && attempt < this.maxRetries
-                    ) {
-                        Logger.output(
-                            `❌ Request attempt #${attempt} failed: ${error.message.substring(0, 200)}`
-                        );
-                        Logger.output(`Will retry in ${this.retryDelay / 1000}seconds...`);
-                        await new Promise(r => setTimeout(r, this.retryDelay));
-                        continue;
-                    } else {
-                        throw error;
-                    }
+                    error.status = response.status;
+                    throw error;
                 }
+                return response;
+            } catch (error) {
+                cancelTimeout();
+                throw error;
             }
         })();
 
@@ -353,15 +334,17 @@ class ProxySystem extends EventTarget {
         const operationId = requestSpec.request_id;
         const mode = requestSpec.streaming_mode || "fake";
         Logger.output(`Browser received request`);
+        let cancelTimeout;
 
         try {
             if (this.requestProcessor.cancelledOperations.has(operationId)) {
                 throw new DOMException("The user aborted a request.", "AbortError");
             }
-            const { responsePromise } = this.requestProcessor.execute(
+            const { responsePromise, cancelTimeout: ct } = this.requestProcessor.execute(
                 requestSpec,
                 operationId
             );
+            cancelTimeout = ct;
             const response = await responsePromise;
             if (this.requestProcessor.cancelledOperations.has(operationId)) {
                 throw new DOMException("The user aborted a request.", "AbortError");
@@ -380,6 +363,8 @@ class ProxySystem extends EventTarget {
                     processing = false;
                     break;
                 }
+
+                cancelTimeout();
 
                 const chunk = textDecoder.decode(value, { stream: true });
 
@@ -409,6 +394,9 @@ class ProxySystem extends EventTarget {
             }
             this._sendErrorResponse(error, operationId);
         } finally {
+            if (cancelTimeout) {
+                cancelTimeout();
+            }
             this.requestProcessor.activeOperations.delete(operationId);
             this.requestProcessor.cancelledOperations.delete(operationId);
         }

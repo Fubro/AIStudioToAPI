@@ -127,39 +127,18 @@ class BrowserManager {
             "utf-8"
         );
 
-        // Replace configuration parameters
-        this.logger.info(`[Config] Setting retry parameters - maxRetries: ${this.config.maxRetries}, retryDelay: ${this.config.retryDelay}`);
-
-        const lines = buildScriptContent.split("\n");
-
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes("this.maxRetries =")) {
-                this.logger.info(`[Config] Found maxRetries line: ${lines[i]}`);
-                const maxRetriesValue = this.config.maxRetries !== undefined ? this.config.maxRetries : 3;
-                lines[i] = `    this.maxRetries = ${maxRetriesValue}; // Maximum ${maxRetriesValue} attempts`;
-                this.logger.info(`[Config] Replaced with: ${lines[i]}`);
-            } else if (lines[i].includes("this.retryDelay =")) {
-                this.logger.info(`[Config] Found retryDelay line: ${lines[i]}`);
-                const retryDelayValue = this.config.retryDelay !== undefined ? this.config.retryDelay : 2000;
-                lines[i] = `    this.retryDelay = ${retryDelayValue}; // Wait ${retryDelayValue}ms before each retry`;
-                this.logger.info(`[Config] Replaced with: ${lines[i]}`);
-            } else if (lines[i].includes("this.targetDomain =")) {
-                this.logger.info(`[Config] Found targetDomain line: ${lines[i]}`);
-                if (process.env.TARGET_DOMAIN) {
+        if (process.env.TARGET_DOMAIN) {
+            const lines = buildScriptContent.split("\n");
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes("this.targetDomain =")) {
+                    this.logger.info(`[Config] Found targetDomain line: ${lines[i]}`);
                     lines[i] = `    this.targetDomain = "${process.env.TARGET_DOMAIN}";`;
                     this.logger.info(`[Config] Replaced with: ${lines[i]}`);
+                    break;
                 }
             }
+            buildScriptContent = lines.join("\n");
         }
-
-        buildScriptContent = lines.join("\n");
-
-        const newLines = buildScriptContent.split("\n");
-        newLines.forEach((line, index) => {
-            if (line.includes("this.maxRetries =") || line.includes("this.retryDelay =") || line.includes("this.targetDomain =")) {
-                this.logger.info(`[Config] Final result - Line ${index + 1}: ${line}`);
-            }
-        });
 
         try {
             this.context = await this.browser.newContext({
