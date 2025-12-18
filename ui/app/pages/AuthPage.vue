@@ -23,40 +23,11 @@
                         type="button"
                         @click="reloadPage"
                     >
-                        Reload Page
+                        {{ t('authReloadPage') }}
                     </button>
                 </div>
             </div>
         </div>
-
-        <el-affix
-            :offset="20"
-            position="top"
-            class="vnc-affix vnc-affix-back"
-            style="position: fixed; left: 20px; top: 20px; z-index: 999;"
-        >
-            <button
-                class="vnc-icon-button"
-                type="button"
-                aria-label="Back"
-                title="Back"
-                @click="goBack"
-            >
-                <svg
-                    t="1765981746589"
-                    class="icon"
-                    viewBox="0 0 1024 1024"
-                    version="1.1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                >
-                    <path
-                        d="M395.21518 513.604544l323.135538-312.373427c19.052938-18.416442 19.052938-48.273447 0-66.660212-19.053961-18.416442-49.910737-18.416442-68.964698 0L291.75176 480.290811c-19.052938 18.416442-19.052938 48.273447 0 66.660212l357.633237 345.688183c9.525957 9.207709 22.01234 13.796214 34.497699 13.796214 12.485359 0 24.971741-4.588505 34.466999-13.82896 19.052938-18.416442 19.052938-48.242747 0-66.660212L395.21518 513.604544z"
-                        fill="#272636"
-                    />
-                </svg>
-            </button>
-        </el-affix>
 
         <el-affix
             :offset="20"
@@ -68,9 +39,60 @@
                 <button
                     class="vnc-bar-button"
                     type="button"
+                    :aria-label="t('authBack')"
+                    :title="t('authBack')"
+                    @click="goBack"
+                >
+                    <svg
+                        t="1766055860230"
+                        class="icon"
+                        viewBox="0 0 1024 1024"
+                        version="1.1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        p-id="1639"
+                        width="200"
+                        height="200"
+                    >
+                        <path
+                            d="M180.864 277.5808c-16.25088 12.288-16.25088 36.7104 0 48.9984L321.9456 433.31072c20.23424 15.3088 49.2544 0.87552 49.2544-24.4992V343.04h201.77408c118.48192 0 214.53312 89.3952 214.53312 199.68 0 110.27968-96.0512 199.68-214.53312 199.68H240.64a30.72 30.72 0 0 0-30.72 30.72v20.48a30.72 30.72 0 0 0 30.72 30.72h332.33408C740.06528 824.32 875.52 698.24512 875.52 542.72s-135.45472-281.6-302.54592-281.6H371.2V195.34848c0-25.37472-29.02016-39.808-49.2544-24.4992L180.864 277.5808z"
+                            fill="#353535"
+                            p-id="1640"
+                        />
+                    </svg>
+                </button>
+                <button
+                    class="vnc-bar-button"
+                    type="button"
                     :disabled="!isConnected"
-                    aria-label="Input text"
-                    title="Input text"
+                    :aria-label="t('switchLanguage')"
+                    :title="t('switchLanguage')"
+                    @click="toggleLanguage"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="m5 8 6 6" />
+                        <path d="m4 14 6-6 2-3" />
+                        <path d="M2 5h12" />
+                        <path d="M7 2h1" />
+                        <path d="m22 22-5-10-5 10" fill="none" />
+                        <path d="M14 18h6" />
+                    </svg>
+                </button>
+                <button
+                    class="vnc-bar-button"
+                    type="button"
+                    :disabled="!isConnected"
+                    :aria-label="t('authInputText')"
+                    :title="t('authInputText')"
                     @click="openTextDialog"
                 >
                     <svg
@@ -93,11 +115,11 @@
                     </svg>
                 </button>
                 <button
-                    class="vnc-bar-button"
+                    class="vnc-bar-button is-backspace"
                     type="button"
                     :disabled="!isConnected"
-                    aria-label="Backspace"
-                    title="Backspace"
+                    :aria-label="t('authBackspace')"
+                    :title="t('authBackspace')"
                     @click="sendBackspace"
                 >
                     <svg
@@ -118,8 +140,8 @@
                     class="vnc-bar-button is-save"
                     type="button"
                     :disabled="!isConnected || isSaving"
-                    aria-label="Save session"
-                    title="Save session"
+                    :aria-label="t('authSaveSession')"
+                    :title="t('authSaveSession')"
                     @click="saveAuth"
                 >
                     <svg
@@ -151,23 +173,23 @@
         >
             <template #header>
                 <div class="vnc-dialog-title">
-                    Session Notice
+                    {{ t('authSessionNoticeTitle') }}
                 </div>
             </template>
             <div class="vnc-dialog-body">
                 <p class="vnc-dialog-text">
-                    This VNC session is temporary and will automatically close after 10 minutes of inactivity or after saving.
+                    {{ t('authSessionNoticeText') }}
                 </p>
                 <el-checkbox v-model="skipIntro">
-                    Don't show again
+                    {{ t('authDontShowAgain') }}
                 </el-checkbox>
             </div>
             <template #footer>
                 <el-button @click="handleIntroCancel">
-                    Cancel
+                    {{ t('cancel') }}
                 </el-button>
                 <el-button type="primary" @click="handleIntroConfirm">
-                    I understand
+                    {{ t('authIUnderstand') }}
                 </el-button>
             </template>
         </el-dialog>
@@ -175,7 +197,7 @@
         <el-dialog
             v-model="showTextDialog"
             class="vnc-dialog"
-            title="Send Text"
+            :title="t('authSendText')"
             :close-on-click-modal="false"
             align-center
         >
@@ -184,16 +206,16 @@
                 v-model="textInput"
                 type="textarea"
                 :rows="4"
-                placeholder="Type text to send to the remote session"
+                :placeholder="t('authSendTextPlaceholder')"
                 maxlength="2000"
                 show-word-limit
             />
             <template #footer>
                 <el-button @click="closeTextDialog">
-                    Cancel
+                    {{ t('cancel') }}
                 </el-button>
                 <el-button type="primary" :disabled="!textInput" @click="sendText">
-                    Send
+                    {{ t('authSend') }}
                 </el-button>
             </template>
         </el-dialog>
@@ -203,10 +225,12 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import I18n from "../utils/i18n";
 
 const hasInitialized = ref(false);
 const isConnected = ref(false);
 const isSaving = ref(false);
+const langVersion = ref(0);
 const rfb = ref(null);
 const showIntroDialog = ref(false);
 const showReload = ref(false);
@@ -218,12 +242,18 @@ const statusTone = ref("info");
 const textInput = ref("");
 const textInputRef = ref(null);
 
+const t = key => I18n.t(key, key);
+
+const toggleLanguage = async () => {
+    await I18n.toggleLang();
+};
+
 const cleanupSession = () => {
     if (navigator.sendBeacon) {
         fetch("/api/vnc/sessions", {
             keepalive: true,
             method: "DELETE",
-        }).catch(() => {});
+        }).catch(() => { });
     }
 };
 
@@ -240,7 +270,7 @@ const closeTextDialog = () => {
 
 const ensureConnected = () => {
     if (!rfb.value || !isConnected.value) {
-        ElMessage.warning("VNC session is not connected yet.");
+        ElMessage.warning(t("authVncNotConnected"));
         return false;
     }
     return true;
@@ -282,9 +312,9 @@ const initializeVnc = () => {
 
     if (!vncContainer || !vncSurface) {
         setStatus({
-            detail: "Please refresh the page and try again.",
+            detail: t("authVncContainerMissingDetail"),
             reload: true,
-            title: "VNC container is missing.",
+            title: t("authVncContainerMissing"),
             tone: "error",
         });
         return;
@@ -296,7 +326,7 @@ const initializeVnc = () => {
 const isIntroDismissed = () => localStorage.getItem("vncIntroSkip") === "1";
 
 const loadVncClient = async (vncContainer, vncSurface) => {
-    setStatus({ title: "Loading VNC client library..." });
+    setStatus({ title: t("authLoadingVnc") });
 
     let RFB;
     try {
@@ -306,15 +336,15 @@ const loadVncClient = async (vncContainer, vncSurface) => {
         console.error("Failed to load noVNC library:", error);
         const safeMessage = escapeHtml(error.message || error);
         setStatus({
-            detail: `${safeMessage}<div class="vnc-status-note">Please check your internet connection.</div>`,
+            detail: `${safeMessage}<div class="vnc-status-note">${t("authLoadVncFailedDetail")}</div>`,
             reload: true,
-            title: "Failed to load VNC client library.",
+            title: t("authLoadVncFailed"),
             tone: "error",
         });
         return;
     }
 
-    setStatus({ title: "Requesting VNC session..." });
+    setStatus({ title: t("authRequestingSession") });
 
     try {
         const initialWidth = vncContainer.clientWidth;
@@ -361,12 +391,12 @@ const loadVncClient = async (vncContainer, vncSurface) => {
             isConnected.value = false;
             const detail = e && e.detail ? e.detail : {};
             const reason = detail.clean
-                ? "Session closed normally."
-                : (detail.reason || "Connection dropped unexpectedly.");
+                ? t("authSessionClosedNormally")
+                : (detail.reason || t("authSessionClosedUnexpected"));
             setStatus({
-                detail: `Reason: ${escapeHtml(reason)}`,
+                detail: `${t("authSessionClosedReason")} ${escapeHtml(reason)}`,
                 reload: true,
-                title: "VNC session has been closed.",
+                title: t("authSessionClosed"),
                 tone: "neutral",
             });
         });
@@ -375,9 +405,9 @@ const loadVncClient = async (vncContainer, vncSurface) => {
             console.error("[VNC] Security failure:", e);
             isConnected.value = false;
             setStatus({
-                detail: "The password was rejected by the server.",
+                detail: t("authAuthFailedDetail"),
                 reload: true,
-                title: "VNC authentication failed.",
+                title: t("authAuthFailed"),
                 tone: "error",
             });
         });
@@ -388,9 +418,9 @@ const loadVncClient = async (vncContainer, vncSurface) => {
         console.error("Error starting VNC session:", error);
         const safeMessage = escapeHtml(error.message || error);
         setStatus({
-            detail: `${safeMessage}<div class="vnc-status-note">This feature requires Linux with <code>Xvfb</code>, <code>x11vnc</code>, and <code>websockify</code> installed.</div>`,
+            detail: `${safeMessage}<div class="vnc-status-note">${t("authStartVncFailedDetail")}</div>`,
             reload: true,
-            title: "Failed to start VNC session",
+            title: t("authStartVncFailed"),
             tone: "error",
         });
     }
@@ -434,7 +464,7 @@ const saveAuth = async (accountName = null) => {
         const data = await response.json();
 
         if (data.message === "vncAuthSaveSuccess") {
-            ElMessage.success(`Account "${data.accountName}" saved successfully!`);
+            ElMessage.success(t("authSaveSuccess").replace("{accountName}", data.accountName));
             sessionStorage.setItem("newAuthInfo", JSON.stringify(data));
             window.location.href = "/";
             return;
@@ -444,18 +474,18 @@ const saveAuth = async (accountName = null) => {
             isSaving.value = false;
             try {
                 const result = await ElMessageBox.prompt(
-                    "Could not automatically detect email. Please enter a name for this account:",
-                    "Account Name",
+                    t("authEnterAccountName"),
+                    t("authAccountNameTitle"),
                     {
-                        cancelButtonText: "Cancel",
-                        confirmButtonText: "Save",
+                        cancelButtonText: t("cancel"),
+                        confirmButtonText: t("authSaveSession"),
                         inputValue: "",
                     }
                 );
                 if (result && result.value) {
                     await saveAuth(result.value);
                 } else {
-                    ElMessage.info("Save cancelled.");
+                    ElMessage.info(t("authSaveCancelled"));
                 }
             } catch (err) {
                 if (err !== "cancel" && err !== "close") {
@@ -465,11 +495,11 @@ const saveAuth = async (accountName = null) => {
             return;
         }
 
-        ElMessage.error(`Failed to save authentication: ${data.error || "Unknown error."}`);
+        ElMessage.error(t("authSaveFailed").replace("{error}", data.error || "Unknown error."));
     } catch (error) {
         console.error("Error saving auth file:", error);
         ElMessage.error(
-            `An error occurred while saving the auth file: ${error.message || error}.`
+            t("authSaveError").replace("{error}", error.message || error)
         );
     } finally {
         isSaving.value = false;
@@ -518,7 +548,14 @@ const startVncIfNeeded = () => {
 };
 
 onMounted(() => {
-    document.title = "Google AI Studio Proxy - Add Account";
+    document.title = t("authPageTitle");
+
+    // Listen for language changes
+    I18n.onChange(() => {
+        langVersion.value++;
+        document.title = t("authPageTitle");
+    });
+
     if (isIntroDismissed()) {
         startVncIfNeeded();
     } else {
@@ -683,11 +720,12 @@ onBeforeUnmount(() => {
     height: @vnc-button-size;
     justify-content: center;
     padding: 0;
-    transition: background-color @transition-fast, transform @transition-fast;
+    transition: background-color @transition-fast, color @transition-fast, transform @transition-fast;
     width: @vnc-button-size;
 
     &:hover:not(:disabled) {
         background: rgba(0, 0, 0, 0.06);
+        color: @primary-color;
         transform: translateY(-1px);
     }
 
@@ -700,6 +738,12 @@ onBeforeUnmount(() => {
         color: @primary-color;
     }
 
+    &.is-backspace {
+        &:hover:not(:disabled) {
+            color: @error-color;
+        }
+    }
+
     svg {
         display: block;
         height: @vnc-icon-size;
@@ -708,6 +752,11 @@ onBeforeUnmount(() => {
 
     svg path {
         fill: currentcolor;
+    }
+
+    svg path[fill="none"] {
+        fill: none;
+        stroke: currentcolor;
     }
 }
 
@@ -731,7 +780,7 @@ onBeforeUnmount(() => {
     margin: 0;
 }
 
-@media (width <= 520px) {
+@media (width <=520px) {
     .vnc-action-bar {
         gap: @spacing-sm;
         padding: @spacing-xs @spacing-md;

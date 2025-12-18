@@ -341,21 +341,21 @@ const currentAccountName = computed(() => {
 });
 
 const forceThinkingIcon = computed(() =>
-    (state.forceThinkingEnabled ? "[x]" : "[ ]")
+    (state.forceThinkingEnabled ? "✅" : "❌")
 );
 const forceThinkingText = computed(() =>
     (state.forceThinkingEnabled ? t("enabled") : t("disabled"))
 );
 
 const forceUrlContextIcon = computed(() =>
-    (state.forceUrlContextEnabled ? "[x]" : "[ ]")
+    (state.forceUrlContextEnabled ? "✅" : "❌")
 );
 const forceUrlContextText = computed(() =>
     (state.forceUrlContextEnabled ? t("enabled") : t("disabled"))
 );
 
 const forceWebSearchIcon = computed(() =>
-    (state.forceWebSearchEnabled ? "[x]" : "[ ]")
+    (state.forceWebSearchEnabled ? "✅" : "❌")
 );
 const forceWebSearchText = computed(() =>
     (state.forceWebSearchEnabled ? t("enabled") : t("disabled"))

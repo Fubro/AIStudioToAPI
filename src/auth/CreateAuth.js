@@ -49,14 +49,14 @@ class CreateAuth {
     async startVncSession(req, res) {
         if (process.platform === "win32") {
             this.logger.error("[VNC] VNC feature is not supported on Windows.");
-            return res.status(501)
-                .json({ message: "errorVncUnsupportedOs" });
+            return res.status(501).json({ message: "errorVncUnsupportedOs" });
         }
 
         if (this.isVncOperationInProgress) {
-            this.logger.warn("[VNC] A VNC operation is already in progress. Please wait.");
-            return res.status(429)
-                .json({ message: "errorVncInProgress" });
+            this.logger.warn(
+                "[VNC] A VNC operation is already in progress. Please wait."
+            );
+            return res.status(429).json({ message: "errorVncInProgress" });
         }
 
         this.isVncOperationInProgress = true;
@@ -65,22 +65,32 @@ class CreateAuth {
             // Always clean up any existing session before starting a new one
             await this._cleanupVncSession("new_session_request");
             // Add a small delay to ensure OS releases ports
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 200));
 
             const userAgent = req.headers["user-agent"] || "";
             const isMobile = /Mobi|Android/i.test(userAgent);
-            this.logger.info(`[VNC] Detected User-Agent: "${userAgent}". Is mobile: ${isMobile}`);
+            this.logger.info(
+                `[VNC] Detected User-Agent: "${userAgent}". Is mobile: ${isMobile}`
+            );
 
             const { width, height } = req.body;
-            const screenWidth = (typeof width === "number" && width > 0)
-                ? Math.floor(width / 2) * 2
-                : (isMobile ? 412 : 1280);
-            const screenHeight = (typeof height === "number" && height > 0)
-                ? Math.floor(height / 2) * 2
-                : (isMobile ? 915 : 720);
+            const screenWidth =
+                typeof width === "number" && width > 0
+                    ? Math.floor(width / 2) * 2
+                    : isMobile
+                    ? 412
+                    : 1280;
+            const screenHeight =
+                typeof height === "number" && height > 0
+                    ? Math.floor(height / 2) * 2
+                    : isMobile
+                    ? 915
+                    : 720;
 
             const screenResolution = `${screenWidth}x${screenHeight}x24`;
-            this.logger.info(`[VNC] Requested VNC resolution: ${screenWidth}x${screenHeight}`);
+            this.logger.info(
+                `[VNC] Requested VNC resolution: ${screenWidth}x${screenHeight}`
+            );
 
             const vncPort = 5901;
             const websockifyPort = 6080;
@@ -88,11 +98,20 @@ class CreateAuth {
 
             const sessionResources = {};
 
-            const cleanup = reason => this._cleanupVncSession(reason);
+            const cleanup = (reason) => this._cleanupVncSession(reason);
 
-            this.logger.info(`[VNC] Starting virtual screen (Xvfb) on display ${display} with resolution ${screenResolution}...`);
-            const xvfb = spawn("Xvfb", [display, "-screen", "0", screenResolution, "+extension", "RANDR"]);
-            xvfb.stderr.on("data", data => {
+            this.logger.info(
+                `[VNC] Starting virtual screen (Xvfb) on display ${display} with resolution ${screenResolution}...`
+            );
+            const xvfb = spawn("Xvfb", [
+                display,
+                "-screen",
+                "0",
+                screenResolution,
+                "+extension",
+                "RANDR",
+            ]);
+            xvfb.stderr.on("data", (data) => {
                 const msg = data.toString();
                 // Filter out common, harmless X11 warnings
                 if (msg.includes("_XSERVTransmkdir: ERROR: euid != 0")) {
@@ -100,30 +119,47 @@ class CreateAuth {
                 }
                 this.logger.info(`[Xvfb] ${msg}`);
             });
-            xvfb.once("close", code => {
-                this.logger.warn(`[Xvfb] Process exited with code ${code}. Triggering cleanup.`);
+            xvfb.once("close", (code) => {
+                this.logger.warn(
+                    `[Xvfb] Process exited with code ${code}. Triggering cleanup.`
+                );
                 cleanup("xvfb_closed");
             });
             sessionResources.xvfb = xvfb;
 
             // Wait for Xvfb to be ready
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
 
-            this.logger.info(`[VNC] Starting VNC server (x11vnc) on port ${vncPort}...`);
-            const x11vnc = spawn("x11vnc", ["-display", display, "-rfbport", String(vncPort), "-forever", "-nopw", "-shared", "-quiet"]);
-            x11vnc.stderr.on("data", data => {
+            this.logger.info(
+                `[VNC] Starting VNC server (x11vnc) on port ${vncPort}...`
+            );
+            const x11vnc = spawn("x11vnc", [
+                "-display",
+                display,
+                "-rfbport",
+                String(vncPort),
+                "-forever",
+                "-nopw",
+                "-shared",
+                "-quiet",
+            ]);
+            x11vnc.stderr.on("data", (data) => {
                 const msg = data.toString();
                 // Filter out common, harmless X11 warnings and info messages
-                if (msg.includes("extension \"DPMS\" missing")
-                    || msg.includes("caught signal")
-                    || msg.includes("X connection to")
-                    || msg.includes("The VNC desktop is:")) {
+                if (
+                    msg.includes('extension "DPMS" missing') ||
+                    msg.includes("caught signal") ||
+                    msg.includes("X connection to") ||
+                    msg.includes("The VNC desktop is:")
+                ) {
                     return; // Ignore these messages
                 }
                 this.logger.error(`[x11vnc Error] ${msg}`);
             });
-            x11vnc.once("close", code => {
-                this.logger.warn(`[x11vnc] Process exited with code ${code}. Triggering cleanup.`);
+            x11vnc.once("close", (code) => {
+                this.logger.warn(
+                    `[x11vnc] Process exited with code ${code}. Triggering cleanup.`
+                );
                 cleanup("x11vnc_closed");
             });
             sessionResources.x11vnc = x11vnc;
@@ -131,38 +167,55 @@ class CreateAuth {
             await this._waitForPort(vncPort);
             this.logger.info("[VNC] VNC server is ready.");
 
-            this.logger.info(`[VNC] Starting websockify on port ${websockifyPort}...`);
-            const websockify = spawn("websockify", [String(websockifyPort), `localhost:${vncPort}`]);
-            websockify.stdout.on("data", data => this.logger.info(`[websockify] ${data.toString()}`));
-            websockify.stderr.on("data", data => {
+            this.logger.info(
+                `[VNC] Starting websockify on port ${websockifyPort}...`
+            );
+            const websockify = spawn("websockify", [
+                String(websockifyPort),
+                `localhost:${vncPort}`,
+            ]);
+            websockify.stdout.on("data", (data) =>
+                this.logger.info(`[websockify] ${data.toString()}`)
+            );
+            websockify.stderr.on("data", (data) => {
                 const msg = data.toString();
 
                 // Downgrade ECONNRESET to INFO as it's expected during cleanup
                 if (msg.includes("read ECONNRESET")) {
-                    this.logger.info(`[VNC Proxy] Connection reset, likely during cleanup: ${msg.trim()}`);
+                    this.logger.info(
+                        `[VNC Proxy] Connection reset, likely during cleanup: ${msg.trim()}`
+                    );
                     return;
                 }
 
                 // Log normal connection info as INFO
-                if (msg.includes("Plain non-SSL (ws://) WebSocket connection")
-                    || msg.includes("Path: '/vnc'")) {
+                if (
+                    msg.includes(
+                        "Plain non-SSL (ws://) WebSocket connection"
+                    ) ||
+                    msg.includes("Path: '/vnc'")
+                ) {
                     this.logger.info(`[websockify] ${msg.trim()}`);
                     return;
                 }
 
                 // Filter out websockify startup info that is printed to stderr
-                if (msg.includes("In exit")
-                    || msg.includes("WebSocket server settings")
-                    || msg.includes("- Listen on")
-                    || msg.includes("- Web server")
-                    || msg.includes("- No SSL")
-                    || msg.includes("- proxying from")) {
+                if (
+                    msg.includes("In exit") ||
+                    msg.includes("WebSocket server settings") ||
+                    msg.includes("- Listen on") ||
+                    msg.includes("- Web server") ||
+                    msg.includes("- No SSL") ||
+                    msg.includes("- proxying from")
+                ) {
                     return;
                 }
                 this.logger.error(`[websockify Error] ${msg}`);
             });
-            websockify.once("close", code => {
-                this.logger.warn(`[websockify] Process exited with code ${code}. Triggering cleanup.`);
+            websockify.once("close", (code) => {
+                this.logger.warn(
+                    `[websockify] Process exited with code ${code}. Triggering cleanup.`
+                );
                 cleanup("websockify_closed");
             });
             sessionResources.websockify = websockify;
@@ -171,29 +224,36 @@ class CreateAuth {
             this.logger.info("[VNC] Websockify is ready.");
 
             this.logger.info("[VNC] Launching browser for VNC session...");
-            const { browser, context } = await this.serverSystem.browserManager.launchBrowserForVNC({
-                args: [
-                    `--window-size=${screenWidth},${screenHeight}`,
-                    "--start-fullscreen",
-                    "--kiosk",
-                    "--no-first-run",
-                    "--disable-infobars",
-                    "--disable-session-crashed-bubble",
-                ], env: { DISPLAY: display },
-                isMobile,
-                viewport: { height: screenHeight, width: screenWidth },
-            });
+            const { browser, context } =
+                await this.serverSystem.browserManager.launchBrowserForVNC({
+                    args: [
+                        `--window-size=${screenWidth},${screenHeight}`,
+                        "--start-fullscreen",
+                        "--kiosk",
+                        "--no-first-run",
+                        "--disable-infobars",
+                        "--disable-session-crashed-bubble",
+                    ],
+                    env: { DISPLAY: display },
+                    isMobile,
+                    viewport: { height: screenHeight, width: screenWidth },
+                });
             sessionResources.browser = browser;
             sessionResources.context = context;
 
             browser.once("disconnected", () => {
-                this.logger.warn("[VNC] Browser disconnected. Triggering cleanup.");
+                this.logger.warn(
+                    "[VNC] Browser disconnected. Triggering cleanup."
+                );
                 cleanup("browser_disconnected");
             });
 
             const page = await context.newPage();
 
-            await page.setViewportSize({ height: screenHeight, width: screenWidth });
+            await page.setViewportSize({
+                height: screenHeight,
+                width: screenWidth,
+            });
 
             await page.addInitScript(`
                 (function() {
@@ -213,23 +273,31 @@ class CreateAuth {
                 })();
             `);
 
-            await page.goto("https://aistudio.google.com/", { timeout: 60000, waitUntil: "networkidle" });
+            await page.goto("https://aistudio.google.com/", {
+                timeout: 60000,
+                waitUntil: "networkidle",
+            });
             sessionResources.page = page;
 
             sessionResources.timeoutHandle = setTimeout(() => {
-                this.logger.warn("[VNC-Timeout] Session has been idle for 10 minutes. Automatically cleaning up.");
+                this.logger.warn(
+                    "[VNC-Timeout] Session has been idle for 10 minutes. Automatically cleaning up."
+                );
                 cleanup("idle_timeout");
             }, 10 * 60 * 1000);
 
             this.vncSession = sessionResources;
 
-            this.logger.info(`[VNC] VNC session is live and accessible via the server's WebSocket proxy.`);
+            this.logger.info(
+                `[VNC] VNC session is live and accessible via the server's WebSocket proxy.`
+            );
             res.json({ protocol: "websocket", success: true });
         } catch (error) {
-            this.logger.error(`[VNC] Failed to start VNC session: ${error.message}`);
+            this.logger.error(
+                `[VNC] Failed to start VNC session: ${error.message}`
+            );
             await this._cleanupVncSession("startup_error");
-            res.status(500)
-                .json({ message: "errorVncStartFailed" });
+            res.status(500).json({ message: "errorVncStartFailed" });
         } finally {
             this.isVncOperationInProgress = false;
         }
@@ -237,31 +305,40 @@ class CreateAuth {
 
     async saveAuthFile(req, res) {
         if (!this.vncSession || !this.vncSession.context) {
-            return res.status(400)
-                .json({ message: "errorVncNoSession" });
+            return res.status(400).json({ message: "errorVncNoSession" });
         }
 
         let { accountName } = req.body;
         const { context, page } = this.vncSession;
 
-        if (!accountName) {
+        if (accountName) {
+            this.logger.info(
+                `[VNC] Using provided account name: ${accountName}`
+            );
+        } else {
             try {
-                this.logger.info("[VNC] Attempting to retrieve account name by scanning <script> JSON...");
-                const scriptLocators = page.locator("script[type=\"application/json\"]");
+                this.logger.info(
+                    "[VNC] Attempting to retrieve account name by scanning <script> JSON..."
+                );
+                const scriptLocators = page.locator(
+                    'script[type="application/json"]'
+                );
                 const count = await scriptLocators.count();
                 this.logger.info(`[VNC] -> Found ${count} JSON <script> tags.`);
 
-                const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
+                const emailRegex =
+                    /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
                 let foundEmail = false;
 
                 for (let i = 0; i < count; i++) {
-                    const content = await scriptLocators.nth(i)
-                        .textContent();
+                    const content = await scriptLocators.nth(i).textContent();
                     if (content) {
                         const match = content.match(emailRegex);
                         if (match && match[0]) {
                             accountName = match[0];
-                            this.logger.info(`[VNC] -> Successfully retrieved account: ${accountName}`);
+                            this.logger.info(
+                                `[VNC] -> Successfully retrieved account: ${accountName}`
+                            );
                             foundEmail = true;
                             break;
                         }
@@ -269,11 +346,16 @@ class CreateAuth {
                 }
 
                 if (!foundEmail) {
-                    throw new Error(`Iterated through all ${count} <script> tags, but no email found.`);
+                    throw new Error(
+                        `Iterated through all ${count} <script> tags, but no email found.`
+                    );
                 }
             } catch (e) {
-                this.logger.warn(`[VNC] Could not automatically detect email: ${e.message}. Requesting manual input from client.`);
-                return res.status(400)
+                this.logger.warn(
+                    `[VNC] Could not automatically detect email: ${e.message}. Requesting manual input from client.`
+                );
+                return res
+                    .status(400)
                     .json({ message: "errorVncEmailFetchFailed" });
             }
         }
@@ -288,12 +370,22 @@ class CreateAuth {
             }
 
             let nextAuthIndex = 1;
-            while (fs.existsSync(path.join(configDir, `auth-${nextAuthIndex}.json`))) {
+            while (
+                fs.existsSync(
+                    path.join(configDir, `auth-${nextAuthIndex}.json`)
+                )
+            ) {
                 nextAuthIndex++;
             }
 
-            const newAuthFilePath = path.join(configDir, `auth-${nextAuthIndex}.json`);
-            fs.writeFileSync(newAuthFilePath, JSON.stringify(authData, null, 2));
+            const newAuthFilePath = path.join(
+                configDir,
+                `auth-${nextAuthIndex}.json`
+            );
+            fs.writeFileSync(
+                newAuthFilePath,
+                JSON.stringify(authData, null, 2)
+            );
 
             this.logger.info(`[VNC] Saved new auth file: ${newAuthFilePath}`);
 
@@ -301,7 +393,9 @@ class CreateAuth {
 
             res.json({
                 accountName,
-                accountNameMap: Object.fromEntries(this.serverSystem.authSource.accountNameMap),
+                accountNameMap: Object.fromEntries(
+                    this.serverSystem.authSource.accountNameMap
+                ),
                 availableIndices: this.serverSystem.authSource.availableIndices,
                 filePath: newAuthFilePath,
                 message: "vncAuthSaveSuccess",
@@ -309,13 +403,19 @@ class CreateAuth {
             });
 
             setTimeout(() => {
-                this.logger.info("[VNC] Cleaning up VNC session after saving...");
+                this.logger.info(
+                    "[VNC] Cleaning up VNC session after saving..."
+                );
                 this._cleanupVncSession("auth_saved");
             }, 500);
         } catch (error) {
-            this.logger.error(`[VNC] Failed to save auth file: ${error.message}`);
-            res.status(500)
-                .json({ error: error.message, message: "errorVncSaveFailed" });
+            this.logger.error(
+                `[VNC] Failed to save auth file: ${error.message}`
+            );
+            res.status(500).json({
+                error: error.message,
+                message: "errorVncSaveFailed",
+            });
         }
     }
 
@@ -327,9 +427,12 @@ class CreateAuth {
         const sessionToCleanup = this.vncSession;
         this.vncSession = null;
 
-        this.logger.info(`[VNC] Starting VNC session cleanup (Reason: ${reason})...`);
+        this.logger.info(
+            `[VNC] Starting VNC session cleanup (Reason: ${reason})...`
+        );
 
-        const { browser, context, xvfb, x11vnc, websockify, timeoutHandle } = sessionToCleanup;
+        const { browser, context, xvfb, x11vnc, websockify, timeoutHandle } =
+            sessionToCleanup;
 
         if (timeoutHandle) {
             clearTimeout(timeoutHandle);
@@ -341,10 +444,13 @@ class CreateAuth {
         browser?.removeAllListeners();
 
         // Helper to race a promise against a timeout
-        const withTimeout = (promise, ms) => Promise.race([
-            promise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms)),
-        ]);
+        const withTimeout = (promise, ms) =>
+            Promise.race([
+                promise,
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Timeout")), ms)
+                ),
+            ]);
 
         try {
             if (context) {
@@ -361,7 +467,9 @@ class CreateAuth {
                 await withTimeout(browser.close(), 2000);
             }
         } catch (e) {
-            this.logger.info(`[VNC] Browser close timed out or failed: ${e.message}. Proceeding to force kill.`);
+            this.logger.info(
+                `[VNC] Browser close timed out or failed: ${e.message}. Proceeding to force kill.`
+            );
         }
 
         const killProcess = (proc, name) => {
@@ -369,9 +477,13 @@ class CreateAuth {
                 try {
                     // Use SIGKILL for immediate termination to prevent hangs
                     proc.kill("SIGKILL");
-                    this.logger.info(`[VNC] Forcefully terminated ${name} process.`);
+                    this.logger.info(
+                        `[VNC] Forcefully terminated ${name} process.`
+                    );
                 } catch (e) {
-                    this.logger.warn(`[VNC] Failed to kill ${name} process: ${e.message}`);
+                    this.logger.warn(
+                        `[VNC] Failed to kill ${name} process: ${e.message}`
+                    );
                 }
             }
         };
