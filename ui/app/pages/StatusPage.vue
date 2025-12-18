@@ -18,7 +18,7 @@
                 <button
                     class="floating-btn lang-switcher"
                     :title="t('switchLanguage')"
-                    :disabled="state.isSwitchingAccount"
+                    :disabled="isBusy"
                     @click="toggleLanguage"
                 >
                     <svg
@@ -43,7 +43,7 @@
                 <button
                     class="floating-btn logout-button"
                     :title="t('logout')"
-                    :disabled="state.isSwitchingAccount"
+                    :disabled="isBusy"
                     @click="handleLogout"
                 >
                     <svg
@@ -69,7 +69,7 @@
             <button
                 class="desktop-btn lang-switcher"
                 :title="t('switchLanguage')"
-                :disabled="state.isSwitchingAccount"
+                :disabled="isBusy"
                 @click="toggleLanguage"
             >
                 <svg
@@ -91,12 +91,7 @@
                     <path d="M14 18h6" />
                 </svg>
             </button>
-            <button
-                class="desktop-btn logout-button"
-                :title="t('logout')"
-                :disabled="state.isSwitchingAccount"
-                @click="handleLogout"
-            >
+            <button class="desktop-btn logout-button" :title="t('logout')" :disabled="isBusy" @click="handleLogout">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -140,7 +135,7 @@
                     <el-select
                         v-model="state.selectedAccount"
                         :placeholder="t('noActiveAccount')"
-                        :disabled="state.isSwitchingAccount"
+                        :disabled="isBusy"
                         style="width: 240px"
                     >
                         <el-option
@@ -152,7 +147,7 @@
                     </el-select>
                     <button
                         id="switch-account-btn"
-                        :disabled="state.isSwitchingAccount || state.selectedAccount === null"
+                        :disabled="isBusy || state.selectedAccount === null"
                         :title="t('btnSwitchAccount')"
                         @click="switchSpecificAccount"
                     >
@@ -172,7 +167,7 @@
                             />
                         </svg>
                     </button>
-                    <button :disabled="state.isSwitchingAccount" :title="t('btnAddUser')" @click="addUser">
+                    <button :disabled="isBusy" :title="t('btnAddUser')" @click="addUser">
                         <svg
                             t="1765912197860"
                             class="icon"
@@ -190,7 +185,7 @@
                         </svg>
                     </button>
                     <button
-                        :disabled="state.isSwitchingAccount || state.selectedAccount === null"
+                        :disabled="isBusy || state.selectedAccount === null"
                         :title="t('btnDeleteUser')"
                         @click="deleteUser"
                     >
@@ -292,6 +287,7 @@ const state = reactive({
     invalidIndicesRaw: [],
     isInitializing: true,
     isSwitchingAccount: false,
+    isSystemBusy: false,
     isUpdating: false,
     logCount: 0,
     logs: t("loading"),
@@ -327,6 +323,8 @@ const forceUrlContextText = computed(() => (state.forceUrlContextEnabled ? t("en
 
 const forceWebSearchIcon = computed(() => (state.forceWebSearchEnabled ? "✅" : "❌"));
 const forceWebSearchText = computed(() => (state.forceWebSearchEnabled ? t("enabled") : t("disabled")));
+
+const isBusy = computed(() => state.isSwitchingAccount || state.isSystemBusy);
 
 const formatErrorsText = computed(() => {
     const indices = state.invalidIndicesRaw || [];
@@ -569,9 +567,7 @@ const updateStatus = data => {
     state.logs = data.logs || "";
     state.initialIndicesRaw = data.status.initialIndicesRaw;
     state.invalidIndicesRaw = data.status.invalidIndicesRaw;
-    if (data.status.isSystemBusy) {
-        state.isSwitchingAccount = true;
-    }
+    state.isSystemBusy = data.status.isSystemBusy;
 
     const isSelectedAccountValid = state.accountDetails.some(acc => acc.index === state.selectedAccount);
 
