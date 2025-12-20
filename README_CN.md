@@ -13,6 +13,7 @@
 - 🔐 **身份验证**：基于 API 密钥的安全认证机制
 - 🐳 **Docker 支持**：通过 Docker 和 Docker Compose 轻松部署
 - 📝 **模型支持**：通过 AI Studio 访问各种 Gemini 模型，包括生图模型
+- 🎨 **主页展示控制**：提供可视化的 Web 控制台，支持账户管理、VNC 登录等操作
 
 ## 🚀 快速开始
 
@@ -45,6 +46,10 @@ npm start
 ```
 
 API 服务将在 `http://localhost:7860` 上运行。
+
+服务启动后，您可以在浏览器中访问 `http://localhost:7860` 打开 Web 控制台主页，在这里可以查看账户状态和服务状态。
+
+> **注意**：Windows 本地运行不支持通过 VNC 在线添加账户，需要使用 `npm run setup-auth` 脚本添加账户。VNC 登录功能仅在 Linux 服务器上的 Docker 部署中可用。
 
 ### ☁ 云端部署（Linux VPS）
 
@@ -117,7 +122,7 @@ sudo docker compose down
 
 **方法 1：VNC 登录（推荐）**
 
-- 访问主页并点击"添加账户"按钮
+- 在浏览器中访问部署的服务地址（如 `http://your-server:7860`）并点击"添加账户"按钮
 - 将跳转到 VNC 页面，显示浏览器实例
 - 登录您的 Google 账户
 - 账户将自动保存为 `auth-N.json`（N 从 0 开始）

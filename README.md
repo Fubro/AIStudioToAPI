@@ -13,6 +13,7 @@ A tool that wraps Google AI Studio web interface to provide OpenAI API and Gemin
 - 🔐 **Authentication**: Secure API key-based authentication
 - 🐳 **Docker Support**: Easy deployment with Docker and Docker Compose
 - 📝 **Model Support**: Access to various Gemini models through AI Studio, including image generation models
+- 🎨 **Homepage Display Control**: Provides a visual web console with account management, VNC login, and more
 
 ## 🚀 Quick Start
 
@@ -45,6 +46,10 @@ npm start
 ```
 
 The API server will be available at `http://localhost:7860`
+
+After the service starts, you can access `http://localhost:7860` in your browser to open the web console homepage, where you can view account status and service status.
+
+> **Note**: Windows local deployment does not support adding accounts via VNC online. You need to use the `npm run setup-auth` script to add accounts. VNC login is only available in Docker deployments on Linux servers.
 
 ### ☁ Cloud Deployment (Linux VPS)
 
@@ -117,7 +122,7 @@ After deployment, you need to add Google accounts using one of these methods:
 
 **Method 1: VNC-Based Login (Recommended)**
 
-- Visit the homepage and click the "Add User" button
+- Access the deployed service address in your browser (e.g., `http://your-server:7860`) and click the "Add User" button
 - You'll be redirected to a VNC page with a browser instance
 - Log in to your Google account
 - The account will be automatically saved as `auth-N.json` (N starts from 0)
