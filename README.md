@@ -152,8 +152,8 @@ Deploy directly on Claw Cloud Run, a fully managed container platform.
 
 This endpoint is processed and then forwarded to the official Gemini API format endpoint.
 
-- `GET /openai/v1/models`: List models.
-- `POST /openai/v1/chat/completions`: Chat completion and image generation, supports non-streaming, real streaming, and fake streaming.
+- `GET /v1/models`: List models.
+- `POST /v1/chat/completions`: Chat completion and image generation, supports non-streaming, real streaming, and fake streaming.
 
 ### ♊ Gemini Native API Format
 

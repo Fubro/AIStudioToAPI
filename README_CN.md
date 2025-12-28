@@ -152,8 +152,8 @@ sudo docker compose down
 
 此端点处理后转发到官方 Gemini API 格式端点。
 
-- `GET /openai/v1/models`: 列出模型。
-- `POST /openai/v1/chat/completions`: 聊天补全和图片生成，支持非流式、真流式和假流式。
+- `GET /v1/models`: 列出模型。
+- `POST /v1/chat/completions`: 聊天补全和图片生成，支持非流式、真流式和假流式。
 
 ### ♊ Gemini 原生 API 格式
 
