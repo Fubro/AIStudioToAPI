@@ -15,6 +15,8 @@
    - **CPU**：`0.5`
    - **Memory**：`1G`
 
+   > 💡 **提示**：如果需要通过 VNC 登录账号，**1G 内存**可能不足以支撑浏览器运行。建议先将配置调整为 **0.2 CPU / 2G Memory** 进行 VNC 登录操作，登录完成后再改回 **0.5 CPU / 1G Memory**。
+
    **Network**:
    - **Container Port**：`7860`
    - **Public Access**：开启（Toggle **On**，后面的网址选项不用动）。
@@ -38,3 +40,12 @@
 1. 等待应用运行起来后，在应用详情页点击 **Network** 标签页。
 2. 复制 **Public Address**（公网地址）。
 3. 在浏览器中访问该地址。输入你设置的 `API_KEYS` 即可进入管理页面。
+
+## 🔌 API 访问地址
+
+部署完成后，使用 **Public Address** 配合以下 Base URL 访问 API：
+
+- **OpenAI 兼容 Base URL**: `https://<your-public-address>/v1`
+- **Gemini 兼容 Base URL**: `https://<your-public-address>/v1beta`
+
+> 更多详细信息，请参考主 README 中的 [使用 API](../../README_CN.md#-使用-api) 章节。
