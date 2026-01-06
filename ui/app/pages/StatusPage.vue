@@ -446,8 +446,16 @@ const totalScannedAccountsText = computed(() => {
 // App version from build-time injection
 const appVersion = computed(() => {
     const version = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
-    // Add 'v' prefix only if version doesn't start with 'v' or 'preview'
-    return version.startsWith("v") || version.startsWith("preview") ? version : `v${version}`;
+    // Add 'v' prefix only if version starts with a number (e.g. 1.0.0 -> v1.0.0)
+    if (/^\d/.test(version)) {
+        return `v${version}`;
+    }
+    // Capitalize 'preview'
+    if (version.startsWith("preview")) {
+        return version.charAt(0).toUpperCase() + version.slice(1);
+    }
+    // Keep raw string for others (e.g. main, dev)
+    return version;
 });
 
 const addUser = () => {

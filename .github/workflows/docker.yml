@@ -76,7 +76,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
-          build-args: VERSION=${{ env.VERSION }}
+          build-args: VERSION=${{ steps.generate_tag.outputs.tag || env.VERSION }}
           provenance: false
 
       - name: Sign the published Docker image
