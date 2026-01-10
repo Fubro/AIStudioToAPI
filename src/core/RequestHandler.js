@@ -418,7 +418,12 @@ class RequestHandler {
                         }
                         if (message.data) fullBody += message.data;
                     }
-                    const translatedChunk = this.formatConverter.translateGoogleToOpenAIStream(fullBody, model);
+                    const streamState = {};
+                    const translatedChunk = this.formatConverter.translateGoogleToOpenAIStream(
+                        fullBody,
+                        model,
+                        streamState
+                    );
                     if (translatedChunk) res.write(translatedChunk);
                     res.write("data: [DONE]\n\n");
                     this.logger.info("[Adapter] Fake mode: Complete content sent at once.");
@@ -838,7 +843,7 @@ class RequestHandler {
     }
 
     async _streamOpenAIResponse(messageQueue, res, model) {
-        const streamState = { inThought: false };
+        const streamState = {};
         let streaming = true;
 
         while (streaming) {
@@ -976,6 +981,18 @@ class RequestHandler {
                 this.logger.info(
                     `[Proxy] ✅ Client-provided thinking config detected, skipping force injection. (Google Native)`
                 );
+            }
+        }
+
+        // Pre-process native Google requests
+        // 1. Ensure thoughtSignature for functionCall (not functionResponse)
+        // 2. Sanitize tools (remove unsupported fields, convert type to uppercase)
+        if (req.method === "POST" && bodyObj) {
+            if (bodyObj.contents) {
+                this.formatConverter.ensureThoughtSignature(bodyObj);
+            }
+            if (bodyObj.tools) {
+                this.formatConverter.sanitizeGeminiTools(bodyObj);
             }
         }
 

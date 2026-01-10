@@ -11,6 +11,40 @@
  * Responsible for formatting and recording system logs
  */
 class LoggingService {
+    // Log levels: DEBUG < INFO < WARN < ERROR
+    static LEVELS = { DEBUG: 0, ERROR: 3, INFO: 1, WARN: 2 };
+    static currentLevel =
+        process.env.LOG_LEVEL?.toUpperCase() === "DEBUG" ? LoggingService.LEVELS.DEBUG : LoggingService.LEVELS.INFO;
+
+    /**
+     * Set the global log level
+     * @param {string} level - 'DEBUG', 'INFO', 'WARN', or 'ERROR'
+     */
+    static setLevel(level) {
+        const upperLevel = level.toUpperCase();
+        if (LoggingService.LEVELS[upperLevel] !== undefined) {
+            LoggingService.currentLevel = LoggingService.LEVELS[upperLevel];
+        }
+    }
+
+    /**
+     * Get the current log level name
+     * @returns {string} Current level name
+     */
+    static getLevel() {
+        return Object.keys(LoggingService.LEVELS).find(
+            key => LoggingService.LEVELS[key] === LoggingService.currentLevel
+        );
+    }
+
+    /**
+     * Check if debug mode is enabled
+     * @returns {boolean}
+     */
+    static isDebugEnabled() {
+        return LoggingService.currentLevel <= LoggingService.LEVELS.DEBUG;
+    }
+
     constructor(serviceName = "ProxyServer") {
         this.serviceName = serviceName;
         this.logBuffer = [];
@@ -73,7 +107,9 @@ class LoggingService {
     }
 
     debug(message) {
-        console.debug(this._formatMessage("DEBUG", message));
+        if (LoggingService.currentLevel <= LoggingService.LEVELS.DEBUG) {
+            console.debug(this._formatMessage("DEBUG", message));
+        }
     }
 }
 
