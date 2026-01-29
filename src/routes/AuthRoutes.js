@@ -45,7 +45,7 @@ class AuthRoutes {
      * - Fastly/Firebase: Fastly-Client-IP
      * - Akamai/Cloudfront: True-Client-IP
      */
-    _getClientIP(req) {
+    getClientIP(req) {
         // Priority 1: CDN-specific headers (most reliable when using CDN)
         // Cloudflare
         if (req.headers["cf-connecting-ip"]) {
@@ -115,7 +115,7 @@ class AuthRoutes {
 
         // Login endpoint with rate limiting
         app.post("/login", (req, res) => {
-            const ip = this._getClientIP(req);
+            const ip = this.getClientIP(req);
             const now = Date.now();
             const RATE_LIMIT_WINDOW = this.rateLimitWindow * 60 * 1000; // Convert minutes to milliseconds
             const MAX_ATTEMPTS = this.rateLimitMaxAttempts;
@@ -181,7 +181,7 @@ class AuthRoutes {
         // Logout endpoint
         const isAuthenticated = this.isAuthenticated.bind(this);
         app.post("/logout", isAuthenticated, (req, res) => {
-            const ip = this._getClientIP(req);
+            const ip = this.getClientIP(req);
             req.session.destroy(err => {
                 if (err) {
                     this.logger.error(`[Auth] Session destruction failed for IP ${ip}: ${err.message}`);
