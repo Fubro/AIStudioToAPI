@@ -47,7 +47,7 @@ class ConnectionRegistry extends EventEmitter {
 
     _removeConnection(websocket) {
         this.connections.delete(websocket);
-        this.logger.warn("[Server] Internal WebSocket client disconnected.");
+        this.logger.info("[Server] Internal WebSocket client disconnected.");
 
         // Clear any existing grace timer before starting a new one
         // This prevents multiple timers from running if connections disconnect in quick succession
@@ -57,7 +57,7 @@ class ConnectionRegistry extends EventEmitter {
 
         this.logger.info("[Server] Starting 5-second reconnect grace period...");
         this.reconnectGraceTimer = setTimeout(async () => {
-            this.logger.error(
+            this.logger.info(
                 "[Server] Grace period ended, no reconnection detected. Connection lost confirmed, cleaning up all pending requests..."
             );
             this.messageQueues.forEach(queue => queue.close());

@@ -59,7 +59,7 @@ class ProxyServerSystem extends EventEmitter {
             }
 
             if (this.browserManager.browser && this.browserManager.page && !this.browserManager.page.isClosed()) {
-                this.logger.info(
+                this.logger.error(
                     "[System] WebSocket lost but browser still running, attempting lightweight reconnect..."
                 );
                 const success = await this.browserManager.attemptLightweightReconnect();
