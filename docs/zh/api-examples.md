@@ -38,7 +38,7 @@ curl -X POST http://localhost:7860/v1/chat/completions \
   }'
 ```
 
-### 🖼️ 生成图片
+### 🖼️ 生成图片 [官方文档](https://ai.google.dev/gemini-api/docs/image-generation?hl=zh-cn)
 
 ```bash
 curl -X POST http://localhost:7860/v1/chat/completions \
@@ -114,7 +114,7 @@ curl -X POST http://localhost:7860/v1beta/models/gemini-2.5-flash-lite:streamGen
   }'
 ```
 
-### 🖼️ 生成图片
+### 🖼️ 生成图片 [官方文档](https://ai.google.dev/gemini-api/docs/image-generation?hl=zh-cn)
 
 ```bash
 curl -X POST http://localhost:7860/v1beta/models/gemini-2.5-flash-image:generateContent \
@@ -154,7 +154,7 @@ curl -X POST http://localhost:7860/v1beta/models/gemini-2.5-flash-image:streamGe
   }'
 ```
 
-### 🎨 Imagen 图像生成
+### 🎨 Imagen 图像生成 [官方文档](https://ai.google.dev/gemini-api/docs/imagen?hl=zh-cn)
 
 使用 `imagen` 系列模型通过 `:predict` 端点生成图像。
 
@@ -198,7 +198,7 @@ curl -X POST http://localhost:7860/v1beta/models/imagen-4.0-generate-001:predict
 
 > 💡 **提示**：Imagen 响应返回的是 base64 编码的图像数据，每张生成的图像都会包含在 `predictions` 数组中。
 
-### 🎤 TTS 语音合成
+### 🎤 TTS 语音合成 [官方文档](https://ai.google.dev/gemini-api/docs/speech-generation?hl=zh-cn)
 
 #### 基础 TTS（默认声音）
 
