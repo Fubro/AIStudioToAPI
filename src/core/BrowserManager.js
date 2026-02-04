@@ -174,8 +174,23 @@ class BrowserManager {
      * Injects specific GPU info and masks webdriver properties to avoid bot detection.
      */
     _getPrivacyProtectionScript(authIndex) {
+        let seedSource = `account_salt_${authIndex}`;
+
+        // Attempt to use accountName (email) for better consistency across index reordering
+        try {
+            const authData = this.authSource.getAuth(authIndex);
+            if (authData && authData.accountName && typeof authData.accountName === "string") {
+                const cleanName = authData.accountName.trim().toLowerCase();
+                if (cleanName.length > 0) {
+                    seedSource = `account_email_${cleanName}`;
+                }
+            }
+        } catch (e) {
+            // Fallback to index-based seed if auth data read fails
+        }
+
         // Use a consistent seed so the fingerprint remains static for this specific account
-        let seed = this._generateIdentitySeed(`account_salt_${authIndex}`);
+        let seed = this._generateIdentitySeed(seedSource);
 
         // Pseudo-random generator based on the seed
         const deterministicRandom = () => {
